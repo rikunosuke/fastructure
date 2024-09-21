@@ -1,0 +1,23 @@
+repos:
+  - repo: local
+    hooks:
+      - id: black
+        name: black
+        entry: black
+        language: python
+        files: '.*\.py$'
+        types: [file]
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        files: '.*\.py$'
+        types: [file]
+        args: [--max-line-length=88, --ignore=F821]
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        files: '.*\.py$'
+        types: [file]
+        args: [--line-length=88]
