@@ -90,7 +90,8 @@ class BaseModel:
             if expected_key not in data:
                 raise cls.ValidationError(f"{expected_key} is required.")
 
-            kwargs[ref.cls_var_name] = data[expected_key]
+            var_name = ref.cls_var_name if isinstance(ref, Reference) else ref
+            kwargs[var_name] = data[expected_key]
 
         return cls._construct(**kwargs)
 
@@ -102,7 +103,8 @@ class BaseModel:
             if i >= len(data):
                 raise cls.ValidationError(f"Index {i} is required.")
 
-            kwargs[ref.cls_var_name] = data[i]
+            var_name = ref.cls_var_name if isinstance(ref, Reference) else ref
+            kwargs[var_name] = data[i]
         return cls._construct(**kwargs)
 
     @classmethod
