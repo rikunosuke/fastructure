@@ -79,7 +79,7 @@ class BaseModel:
         return {ref.cls_var_name: ref for ref in cls._references}
 
     @classmethod
-    def list_map(cls) -> dict:
+    def list_map(cls) -> dict | list:
         return {i: ref for i, ref in enumerate(cls._references)}
 
     @classmethod
@@ -98,8 +98,13 @@ class BaseModel:
     @classmethod
     def from_list(cls, data: list) -> "BaseModel":
         list_map = cls._config.get_list_map(cls)
+        list_result = (
+            list_map
+            if isinstance(list_map, dict)
+            else {i: value for i, value in enumerate(list_map)}
+        )
         kwargs = {}
-        for i, ref in list_map.items():
+        for i, ref in list_result.items():
             if i >= len(data):
                 raise cls.ValidationError(f"Index {i} is required.")
 

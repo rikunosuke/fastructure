@@ -55,7 +55,7 @@ class TestFromDic(TestCase):
 
 
 class TestFromList(TestCase):
-    def test_from_list(self):
+    def test_from_list_dict_map(self):
         @structured(convert_all=True)
         @dataclasses.dataclass(frozen=True)
         class Author:
@@ -82,6 +82,30 @@ class TestFromList(TestCase):
             @classmethod
             def list_map(cls) -> dict:
                 return {0: "first_name", 1: "last_name", 2: cls.age, 3: cls.birthday}
+
+        with self.assertRaises(Person.ValidationError):
+            Person.from_list(["John", 20, datetime(2000, 1, 1)])
+
+        person = Person.from_list(["John", "Doe", 20, "2000-01-01"])
+        self.assertEqual("John Doe", person.name)
+        self.assertEqual(20, person.age)
+        self.assertEqual(datetime(2000, 1, 1), person.birthday)
+
+    def test_from_list_list_map(self):
+        @structured(convert_all=True)
+        @dataclasses.dataclass(frozen=True)
+        class Person:
+            name: str
+            age: int
+            birthday: datetime
+
+            @classmethod
+            def clean_name(cls, first_name: str, last_name: str) -> str:
+                return f"{first_name} {last_name}"
+
+            @classmethod
+            def list_map(cls) -> list:
+                return ["first_name", "last_name", cls.age, cls.birthday]
 
         with self.assertRaises(Person.ValidationError):
             Person.from_list(["John", 20, datetime(2000, 1, 1)])
