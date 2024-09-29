@@ -1,9 +1,13 @@
 import dataclasses
-from typing import Callable, Type, Unpack
+from typing import Any, Callable, Type, Unpack
 
 from fastructure.base import BaseModel
 from fastructure.config import ConfigType
 from fastructure.reference import Reference
+
+
+def is_child(typehint: Any) -> bool:
+    return issubclass(typehint, BaseModel) or isinstance(typehint, Reference)
 
 
 def structured[
@@ -25,9 +29,10 @@ def structured[
         fields = dataclasses.fields(cls)
         cls._references = tuple(
             Reference(
-                cls=cls.__name__,
+                cls=cls,
                 cls_var_name=field.name,
                 typehint=field.type,
+                is_child=is_child(field.type),
             )
             for field in fields
         )

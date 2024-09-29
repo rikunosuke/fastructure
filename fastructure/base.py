@@ -54,11 +54,20 @@ class BaseModel:
                     ][0]
                 except IndexError:
                     continue
-                if not cls._config.is_convertible(ref.typehint):
+                if not cls._config.is_convertible(ref.typehint) and not ref.is_child:
                     continue
-                kwargs[field_name] = cls._config.converter_class(
-                    value=original_values[field_name], to_type=ref.to_type
-                ).execute()
+
+                if ref.is_child:
+                    original_value = original_values[field_name]
+                    kwargs[field_name] = (
+                        ref.child_cls.from_dict(original_value)
+                        if isinstance(original_value, dict)
+                        else ref.child_cls.from_list(original_value)
+                    )
+                else:
+                    kwargs[field_name] = cls._config.converter_class(
+                        value=original_values[field_name], to_type=ref.to_type
+                    ).execute()
                 continue
 
             if not callable(clean_method):

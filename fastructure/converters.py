@@ -21,6 +21,7 @@ class Converter[ToType]:
             return self.to_bool(self._value)
         elif self._to_type is datetime:
             return self.to_datetime(self._value)
+        return self._value
 
     def execute(self) -> ToType:
         try:
