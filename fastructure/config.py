@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Annotated, Any, Callable, Type, TypedDict, get_origin
 
 from fastructure.converters import Converter
+from fastructure.reference import Reference, Annotation
 from fastructure.typehints import AutoConvert
 
 if TYPE_CHECKING:
@@ -9,6 +10,9 @@ if TYPE_CHECKING:
 CLEAN_METHOD_PREFIX = "clean_"
 DICT_MAP_METHOD_NAME = "dict_map"
 LIST_MAP_METHOD_NAME = "list_map"
+
+
+type MapType = str | Reference | "BaseModel"
 
 
 class ConfigType(TypedDict, total=False):
@@ -32,7 +36,7 @@ class Config:
     ):
         self.clean_method_prefix = clean_method_prefix
         self.convert_all = convert_all
-        self.converter_class = converter
+        self._converter_class = converter
         self.dict_map_method = dict_map_method
         self.list_map_method = list_map_method
         self.class_itself_var_names = ["cls"] + (class_itself_var_names or [])
@@ -51,25 +55,53 @@ class Config:
             )
         return method_name.replace(self.clean_method_prefix, "")
 
-    def get_dict_map(self, model: Type["BaseModel"]) -> dict | None:
-        if hasattr(model, self.dict_map_method):
+    def get_dict_map(self, model: Type["BaseModel"]) -> dict[str, MapType]:
+        try:
             return getattr(model, self.dict_map_method)()
+        except AttributeError as e:
+            e.add_note(f"Model {model} has no method `{self.dict_map_method}`")
+            raise
 
-        raise AttributeError(f"Model {model} has no method `{self.dict_map_method}`")
-
-    def get_list_map(self, model: Type["BaseModel"]) -> dict | None:
-        if hasattr(model, self.list_map_method):
+    def get_list_map(
+        self, model: Type["BaseModel"]
+    ) -> dict[int, MapType] | list[MapType]:
+        try:
             return getattr(model, self.list_map_method)()
+        except AttributeError as e:
+            e.add_note(f"Model {model} has no method `{self.list_map_method}`")
+            raise
 
-        raise AttributeError(f"Model {model} has no method `{self.list_map_method}`")
-
-    def is_convertible(self, annotation: Any) -> bool:
+    def _is_convertible(self, annotation: Annotation) -> bool:
         if self.convert_all:
             return True
-        if get_origin(annotation) is not Annotated:
+
+        if annotation.origin is not Annotated:
             return False
 
-        if not (metadata := getattr(annotation, "__metadata__", None)):
-            return False
+        return annotation.has_auto_convert
 
-        return any(m is AutoConvert for m in metadata)
+    def parse(self, value, annotation: Annotation):
+        if not self._is_convertible(annotation):
+            return value
+
+        return self._recursive_parse(value, annotation)
+
+    def _recursive_parse(self, value, annotation: Annotation):
+        """
+        expected typehint:
+            var: Annotated[int, ...]
+            var: list[int]
+            var: list[int, str]
+            var: int
+            var: BaseModel
+            var: list[BaseModel]
+        """
+        if annotation.is_annotated:
+            return self._recursive_parse(value, annotation.get_child_annotation(0))
+        if annotation.has_args:
+            return value.__class__(
+                self._recursive_parse(val, annotation.get_child_annotation(i))
+                for i, val in enumerate(value)
+            )
+
+        return self._converter_class(value, annotation.origin).execute()

@@ -1,7 +1,7 @@
 import inspect
-from typing import ClassVar, Type, Unpack
+from typing import ClassVar, Type, Unpack, Any
 
-from fastructure.config import Config, ConfigType
+from fastructure.config import Config, ConfigType, MapType
 from fastructure.converters import Converter
 from fastructure.exceptions import ConvertError as BaseConvertError
 from fastructure.exceptions import ValidationError as BaseValidationError
@@ -34,17 +34,8 @@ class BaseModel:
 
     @classmethod
     def _construct(cls, **kwargs) -> "BaseModel":
-        for method_name, _ in inspect.getmembers(cls, predicate=inspect.ismethod):
-            # set clean method to None if it's not in kwargs
-            try:
-                field_name = cls._config.substring_field_name(method_name)
-            except ValueError:
-                continue
-            if field_name not in kwargs:
-                kwargs[field_name] = None
-
-        original_values = kwargs.copy()
-        for field_name, value in original_values.items():
+        original_values = cls._add_keys(kwargs.copy())
+        for field_name, original_val in original_values.items():
             try:
                 clean_method = cls._config.get_clean_method(field_name, cls)
             except AttributeError:
@@ -54,20 +45,10 @@ class BaseModel:
                     ][0]
                 except IndexError:
                     continue
-                if not cls._config.is_convertible(ref.typehint) and not ref.is_child:
-                    continue
 
-                if ref.is_child:
-                    original_value = original_values[field_name]
-                    kwargs[field_name] = (
-                        ref.child_cls.from_dict(original_value)
-                        if isinstance(original_value, dict)
-                        else ref.child_cls.from_list(original_value)
-                    )
-                else:
-                    kwargs[field_name] = cls._config.converter_class(
-                        value=original_values[field_name], to_type=ref.to_type
-                    ).execute()
+                kwargs[ref.cls_var_name] = cls._config.parse(
+                    value=original_val, annotation=ref
+                )
                 continue
 
             if not callable(clean_method):
@@ -83,12 +64,45 @@ class BaseModel:
         init_parser = ParameterParser(cls, cls._config, cleaned)
         return cls(*init_parser.list_params, **init_parser.dict_params)
 
+    # @classmethod
+    # def _construct_base_model(cls, ref: Reference, data: dict, value: Any) -> dict:
+    #     if not ref.has_fastructure_model:
+    #         return data
+    #
+    #     if issubclass(ref.origin, BaseModel):
+    #         data[ref.cls_var_name] = (
+    #             ref.origin.from_dict(value)
+    #             if isinstance(value, dict)
+    #             else ref.origin.from_list(value)
+    #         )
+    #     else:
+    #         base_model = ref.get_child_annotation(0)
+    #         for
+    #     return data
+
     @classmethod
-    def dict_map(cls) -> dict:
+    def _add_keys(cls, data: dict) -> dict:
+        """
+        insert clean method keys to data.
+        """
+        for method_name, _ in inspect.getmembers(cls, predicate=inspect.ismethod):
+            # set clean method to None if it's not in kwargs
+            try:
+                field_name = cls._config.substring_field_name(method_name)
+            except ValueError:
+                continue
+
+            if field_name not in data:
+                data[field_name] = None
+
+        return data
+
+    @classmethod
+    def dict_map(cls) -> dict[str, MapType]:
         return {ref.cls_var_name: ref for ref in cls._references}
 
     @classmethod
-    def list_map(cls) -> dict | list:
+    def list_map(cls) -> dict[int, MapType] | list[MapType]:
         return {i: ref for i, ref in enumerate(cls._references)}
 
     @classmethod
@@ -115,7 +129,9 @@ class BaseModel:
         kwargs = {}
         for i, ref in list_result.items():
             if i >= len(data):
-                raise cls.ValidationError(f"Index {i} is required.")
+                raise cls.ValidationError(
+                    f"class '{cls.__name__}' must have a list map with length {len(data)}"
+                )
 
             var_name = ref.cls_var_name if isinstance(ref, Reference) else ref
             kwargs[var_name] = data[i]

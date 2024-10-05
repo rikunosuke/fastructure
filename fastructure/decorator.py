@@ -6,10 +6,6 @@ from fastructure.config import ConfigType
 from fastructure.reference import Reference
 
 
-def is_child(typehint: Any) -> bool:
-    return issubclass(typehint, BaseModel) or isinstance(typehint, Reference)
-
-
 def structured[
     T
 ](
@@ -32,7 +28,6 @@ def structured[
                 cls=cls,
                 cls_var_name=field.name,
                 typehint=field.type,
-                is_child=is_child(field.type),
             )
             for field in fields
         )

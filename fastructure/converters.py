@@ -1,8 +1,12 @@
 from datetime import datetime
 from functools import singledispatchmethod
-from typing import Any, Type
+from typing import Any, Type, TYPE_CHECKING
 
 from fastructure.exceptions import ConvertError
+
+
+if TYPE_CHECKING:
+    from fastructure.base import BaseModel
 
 
 class Converter[ToType]:
@@ -11,6 +15,8 @@ class Converter[ToType]:
         self._to_type = to_type
 
     def _execute(self) -> ToType:
+        from fastructure.base import BaseModel
+
         if self._to_type is str:
             return self.to_str(self._value)
         elif self._to_type is int:
@@ -21,6 +27,8 @@ class Converter[ToType]:
             return self.to_bool(self._value)
         elif self._to_type is datetime:
             return self.to_datetime(self._value)
+        elif issubclass(self._to_type, BaseModel):
+            return self.to_base_model(self._value)
         return self._value
 
     def execute(self) -> ToType:
@@ -28,6 +36,17 @@ class Converter[ToType]:
             return self._execute()
         except ValueError as e:
             raise ConvertError(str(e))
+
+    def to_base_model(self, value: Any) -> "BaseModel":
+        if isinstance(value, self._to_type):
+            # converter may run several times.
+            # So check if may already values are converted.
+            return value
+        return (
+            self._to_type.from_dict(value)
+            if isinstance(value, dict)
+            else self._to_type.from_list(value)
+        )
 
     @singledispatchmethod
     def to_str(self, value) -> str:

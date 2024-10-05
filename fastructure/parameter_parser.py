@@ -1,9 +1,13 @@
 import inspect
 from functools import cached_property
-from typing import Any, Callable, get_args
+from typing import Any, Callable, get_args, Type, TYPE_CHECKING
 
 from fastructure.config import Config
 from fastructure.exceptions import InvalidParameterName
+from fastructure.reference import Reference, Annotation
+
+if TYPE_CHECKING:
+    from fastructure.base import BaseModel
 
 
 class ParameterParser[**P]:
@@ -81,15 +85,8 @@ class ParameterParser[**P]:
 
     def _convert(self, field_name: str, value: Any) -> Any:
         try:
-            annotation = self._parameters[field_name].annotation
+            annotation = Annotation(typehint=self._parameters[field_name].annotation)
         except KeyError:
             return value
 
-        if not self._config.is_convertible(annotation):
-            return value
-        try:
-            base_cls = get_args(annotation)[0]
-        except IndexError:
-            base_cls = annotation
-        converter = self._config.converter_class(value=value, to_type=base_cls)
-        return converter.execute()
+        return self._config.parse(value=value, annotation=annotation)
