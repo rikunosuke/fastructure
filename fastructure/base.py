@@ -64,22 +64,6 @@ class BaseModel:
         init_parser = ParameterParser(cls, cls._config, cleaned)
         return cls(*init_parser.list_params, **init_parser.dict_params)
 
-    # @classmethod
-    # def _construct_base_model(cls, ref: Reference, data: dict, value: Any) -> dict:
-    #     if not ref.has_fastructure_model:
-    #         return data
-    #
-    #     if issubclass(ref.origin, BaseModel):
-    #         data[ref.cls_var_name] = (
-    #             ref.origin.from_dict(value)
-    #             if isinstance(value, dict)
-    #             else ref.origin.from_list(value)
-    #         )
-    #     else:
-    #         base_model = ref.get_child_annotation(0)
-    #         for
-    #     return data
-
     @classmethod
     def _add_keys(cls, data: dict) -> dict:
         """
