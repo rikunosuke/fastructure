@@ -1,5 +1,5 @@
 import inspect
-from typing import ClassVar, Type, Unpack, Any
+from typing import ClassVar, Type, Unpack
 
 from fastructure.config import Config, ConfigType, MapType
 from fastructure.converters import Converter
@@ -95,7 +95,9 @@ class BaseModel:
         kwargs = {}
         for expected_key, ref in dict_map.items():
             if expected_key not in data:
-                raise cls.ValidationError(f"{expected_key} is required.")
+                raise cls.ValidationError(
+                    f"{expected_key} is required to make a instance of '{cls.__name__}'"
+                )
 
             var_name = ref.cls_var_name if isinstance(ref, Reference) else ref
             kwargs[var_name] = data[expected_key]

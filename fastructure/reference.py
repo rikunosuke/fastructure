@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import TYPE_CHECKING, Annotated, Any, Type, get_args, get_origin, Self
+from typing import TYPE_CHECKING, Annotated, Any, Self, Type, get_args, get_origin
 
 from fastructure.typehints import AutoConvert
 

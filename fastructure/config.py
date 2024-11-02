@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING, Annotated, Any, Callable, Type, TypedDict, get_origin
+from typing import TYPE_CHECKING, Annotated, Callable, Type, TypedDict
 
 from fastructure.converters import Converter
-from fastructure.reference import Reference, Annotation
-from fastructure.typehints import AutoConvert
+from fastructure.reference import Annotation, Reference
 
 if TYPE_CHECKING:
     from fastructure.base import BaseModel

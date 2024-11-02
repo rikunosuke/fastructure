@@ -1,9 +1,8 @@
 from datetime import datetime
 from functools import singledispatchmethod
-from typing import Any, Type, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Type
 
 from fastructure.exceptions import ConvertError
-
 
 if TYPE_CHECKING:
     from fastructure.base import BaseModel

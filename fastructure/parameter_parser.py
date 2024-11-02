@@ -1,13 +1,10 @@
 import inspect
 from functools import cached_property
-from typing import Any, Callable, get_args, Type, TYPE_CHECKING
+from typing import Any, Callable
 
 from fastructure.config import Config
 from fastructure.exceptions import InvalidParameterName
-from fastructure.reference import Reference, Annotation
-
-if TYPE_CHECKING:
-    from fastructure.base import BaseModel
+from fastructure.reference import Annotation
 
 
 class ParameterParser[**P]:

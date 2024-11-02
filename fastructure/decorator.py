@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Callable, Type, Unpack
+from typing import Callable, Type, Unpack
 
 from fastructure.base import BaseModel
 from fastructure.config import ConfigType
