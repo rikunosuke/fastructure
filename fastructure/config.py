@@ -98,9 +98,12 @@ class Config:
         if annotation.is_annotated:
             return self._recursive_parse(value, annotation.get_child_annotation(0))
         if annotation.has_args:
-            return value.__class__(
-                self._recursive_parse(val, annotation.get_child_annotation(i))
-                for i, val in enumerate(value)
-            )
+            return self._converter_class(
+                value.__class__(
+                    self._recursive_parse(val, annotation.get_child_annotation(i))
+                    for i, val in enumerate(value)
+                ),
+                annotation.origin,
+            ).execute()
 
         return self._converter_class(value, annotation.origin).execute()

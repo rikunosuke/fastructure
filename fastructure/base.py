@@ -3,7 +3,6 @@ from typing import ClassVar, Type, Unpack
 
 from fastructure.config import Config, ConfigType, MapType
 from fastructure.converters import Converter
-from fastructure.exceptions import ConvertError as BaseConvertError
 from fastructure.exceptions import ValidationError as BaseValidationError
 from fastructure.parameter_parser import ParameterParser
 from fastructure.reference import Reference
@@ -20,11 +19,6 @@ class BaseModel:
 
     class ValidationError(BaseValidationError):
         """Raised when a value does not pass validation."""
-
-        pass
-
-    class ConvertError(BaseConvertError):
-        """Raised when a value cannot be converted to the correct type."""
 
         pass
 
@@ -116,7 +110,8 @@ class BaseModel:
         for i, ref in list_result.items():
             if i >= len(data):
                 raise cls.ValidationError(
-                    f"class '{cls.__name__}' must have a list map with length {len(data)}"
+                    f"class '{cls.__name__}' must have "
+                    f"a list map with length {len(data)}"
                 )
 
             var_name = ref.cls_var_name if isinstance(ref, Reference) else ref

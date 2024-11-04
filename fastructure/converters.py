@@ -26,6 +26,10 @@ class Converter[ToType]:
             return self.to_bool(self._value)
         elif self._to_type is datetime:
             return self.to_datetime(self._value)
+        elif self._to_type is list:
+            return self.to_list(self._value)
+        elif self._to_type is tuple:
+            return self.to_tuple(self._value)
         elif issubclass(self._to_type, BaseModel):
             return self.to_base_model(self._value)
         return self._value
@@ -103,3 +107,12 @@ class Converter[ToType]:
     @to_datetime.register(datetime)
     def _(self, value: datetime) -> datetime:
         return value
+
+    def to_list(self, value) -> list:
+        return list(value)
+
+    def to_tuple(self, value) -> tuple:
+        return tuple(value)
+
+    def to_set(self, value) -> set:
+        return set(value)
