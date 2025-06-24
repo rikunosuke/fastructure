@@ -18,7 +18,8 @@ def structured[T](
         else:
             cls = type(dataclass_.__name__, (dataclass_, BaseModel), {}, **kwargs)
 
-        fields = dataclasses.fields(cls)
+        # Use __dataclass_fields__ to include InitVar fields
+        fields = cls.__dataclass_fields__.values()
         cls._references = tuple(
             Reference(
                 cls=cls,

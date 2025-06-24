@@ -74,6 +74,11 @@ class Config:
         if self.convert_all:
             return True
 
+        if annotation.is_init_var:
+            # For InitVar fields, check the inner annotation for AutoConvert
+            child = annotation.get_child_annotation(0)
+            return child.origin is Annotated and child.has_auto_convert
+
         if annotation.origin is not Annotated:
             return False
 

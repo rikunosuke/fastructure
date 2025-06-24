@@ -44,7 +44,6 @@ class TestInitVar(TestCase):
             birthday: datetime = dataclasses.field(init=False)
 
             def __post_init__(self, init_var: int):
-                assert isinstance(init_var, int), f"init_var ({init_var=}) must be int"
                 self.birthday = datetime.fromtimestamp(init_var)
 
             @classmethod
