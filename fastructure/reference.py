@@ -1,3 +1,4 @@
+import dataclasses
 from functools import cached_property
 from typing import TYPE_CHECKING, Annotated, Any, Self, Type, get_args, get_origin
 
@@ -21,12 +22,19 @@ class Annotation:
         return get_origin(self._typehint) is Annotated
 
     @property
+    def is_init_var(self) -> bool:
+        return isinstance(self._typehint, dataclasses.InitVar)
+
+    @property
     def has_auto_convert(self) -> bool:
-        return any(anno.origin is AutoConvert for anno in self.children)
+        return any(
+            anno.origin is AutoConvert or anno.has_auto_convert
+            for anno in self.children
+        )
 
     @property
     def has_args(self) -> bool:
-        return len(get_args(self._typehint)) > 0
+        return len(self.args) > 0
 
     @cached_property
     def has_fastructure_model(self) -> bool:
@@ -51,25 +59,33 @@ class Annotation:
         return self._typehint
 
     @cached_property
-    def children(self) -> list[Self]:
-        if not self.has_args:
-            return []
+    def args(self) -> list[Any]:
+        if self.is_init_var:
+            return [self._typehint.type]
+        return list(get_args(self._typehint))
 
+    @cached_property
+    def children(self) -> list[Self]:
         return [
             Annotation(
                 typehint=typehint,
             )
-            for typehint in get_args(self._typehint)
+            for typehint in self.args
         ]
 
     def get_child_annotation(self, index: int):
         if not self.has_args:
-            raise ValueError(f"No annotation for {index}")
+            raise ValueError(f"No annotation for {index}, {self._typehint}.")
 
         if len(self.children) == 1:
             return self.children[0]
 
-        return self.children[index]
+        try:
+            return self.children[index]
+        except IndexError:
+            raise ValueError(
+                f"Annotation {self._typehint} has no child at index {index}."
+            )
 
 
 class Reference(Annotation):
@@ -93,16 +109,14 @@ class Reference(Annotation):
 
     @cached_property
     def children(self) -> list[Self]:
-        if not self.has_args:
-            return []
-
+        annotations = super().children
         return [
             Reference(
                 cls=self._cls,
                 cls_var_name=self.cls_var_name,
-                typehint=typehint,
+                typehint=annotation._typehint,
             )
-            for typehint in get_args(self._typehint)
+            for annotation in annotations
         ]
 
     @property

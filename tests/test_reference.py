@@ -14,7 +14,7 @@ class TestReference(TestCase):
             name: str
             age: int
             debut_year: int
-            init_var: dataclasses.InitVar[int] = dataclasses.field()
+            init_var: dataclasses.InitVar[int]
             birthday: datetime = datetime(2000, 1, 1)
 
             def __post_init__(self, init_var: int):

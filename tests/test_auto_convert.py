@@ -9,7 +9,6 @@ from fastructure.typehints import AutoConvert
 
 class TestAutoConvert(TestCase):
     def test_auto_convert(self):
-
         @structured(convert_all=False)
         @dataclasses.dataclass(frozen=True)
         class Author:
@@ -20,7 +19,7 @@ class TestAutoConvert(TestCase):
             @classmethod
             def clean_age(cls, age: int) -> int:
                 assert isinstance(age, str), "age should not be converted to int"
-                return age
+                return age  # type: ignore
 
         author = Author._construct(name="John", age="20", birthday="2000-01-01")
         self.assertEqual("John", author.name)
@@ -28,7 +27,7 @@ class TestAutoConvert(TestCase):
             "20",
             author.age,
             "if convert_all is False and AutoConvert is not annotated,"
-            "then value should not be conveted",
+            "then value should not be converted",
         )
         self.assertEqual(datetime(2000, 1, 1), author.birthday)
 

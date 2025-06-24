@@ -6,14 +6,10 @@ from fastructure.config import ConfigType
 from fastructure.reference import Reference
 
 
-def structured[
-    T
-](
+def structured[T](
     **kwargs: Unpack[ConfigType],
-) -> Callable[
-    [Type[dataclasses.dataclass]], Type[BaseModel]
-]:
-    def wrapper(dataclass_: T) -> Type[BaseModel]:
+) -> Callable[[Type[dataclasses.dataclass]], Type["BaseModel"]]:
+    def wrapper(dataclass_: Type[T]) -> Type[T]:
         if not dataclasses.is_dataclass(dataclass_):
             raise TypeError(f"{dataclass_} is not a dataclass.")
 

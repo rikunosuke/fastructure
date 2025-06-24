@@ -95,7 +95,7 @@ class Config:
             var: BaseModel
             var: list[BaseModel]
         """
-        if annotation.is_annotated:
+        if annotation.is_annotated or annotation.is_init_var:
             return self._recursive_parse(value, annotation.get_child_annotation(0))
         if annotation.has_args:
             return self._converter_class(

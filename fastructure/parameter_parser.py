@@ -8,7 +8,6 @@ from fastructure.reference import Annotation
 
 
 class ParameterParser[**P]:
-
     def __init__(
         self,
         method: Callable,
@@ -64,7 +63,7 @@ class ParameterParser[**P]:
         except KeyError as e:
             raise InvalidParameterName(
                 f"Method '{self._method.__name__}' has no parameter named: "
-                f"{str(e).replace("KeyError: ", "")}"
+                f"{str(e).replace('KeyError: ', '')}"
             )
 
     @property

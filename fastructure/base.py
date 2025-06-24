@@ -1,5 +1,5 @@
 import inspect
-from typing import ClassVar, Type, Unpack
+from typing import ClassVar, Type, Unpack, dataclass_transform
 
 from fastructure.config import Config, ConfigType, MapType
 from fastructure.converters import Converter
@@ -8,9 +8,14 @@ from fastructure.parameter_parser import ParameterParser
 from fastructure.reference import Reference
 
 
-class BaseModel:
+@dataclass_transform()
+class BaseModelMeta(type):
+    pass
+
+
+class BaseModel[InstanceType](metaclass=BaseModelMeta):
     _config: ClassVar[Config]
-    _references: ClassVar[tuple[Reference]]
+    _references: ClassVar[tuple[Reference, ...]]
 
     def __init_subclass__(
         cls, *, converter: Type[Converter] = Converter, **kwargs: Unpack[ConfigType]
@@ -27,7 +32,7 @@ class BaseModel:
         return kwargs
 
     @classmethod
-    def _construct(cls, **kwargs) -> "BaseModel":
+    def _construct(cls: Type[InstanceType], **kwargs) -> InstanceType:
         original_values = cls._add_keys(kwargs.copy())
         for field_name, original_val in original_values.items():
             try:
@@ -84,7 +89,7 @@ class BaseModel:
         return {i: ref for i, ref in enumerate(cls._references)}
 
     @classmethod
-    def from_dict(cls, data: dict) -> "BaseModel":
+    def from_dict(cls: Type[InstanceType], data: dict) -> InstanceType:
         dict_map = cls._config.get_dict_map(cls)
         kwargs = {}
         for expected_key, ref in dict_map.items():
@@ -99,7 +104,7 @@ class BaseModel:
         return cls._construct(**kwargs)
 
     @classmethod
-    def from_list(cls, data: list) -> "BaseModel":
+    def from_list(cls: Type[InstanceType], data: list) -> InstanceType:
         list_map = cls._config.get_list_map(cls)
         list_result = (
             list_map
@@ -119,5 +124,5 @@ class BaseModel:
         return cls._construct(**kwargs)
 
     @classmethod
-    def construct(cls, **kwargs) -> "BaseModel":
+    def construct(cls: Type[InstanceType], **kwargs) -> InstanceType:
         return cls._construct(**kwargs)

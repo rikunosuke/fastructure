@@ -6,7 +6,6 @@ from fastructure import structured
 
 class TestInitSubclass(TestCase):
     def test_clean_method_prefix(self):
-
         @structured(clean_method_prefix="fix_")
         @dataclasses.dataclass(frozen=True)
         class Author:
